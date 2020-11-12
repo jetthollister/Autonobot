@@ -33,6 +33,7 @@ CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 ACCESS_KEY = os.getenv('ACCESS_KEY')
 ACCESS_SECRET = os.getenv('ACCESS_SECRET')
 BEARER_TOKEN = os.getenv('BEARER_TOKEN')
+RAPID_KEY = os.getenv('RAPID_KEY')
 
 # Using tweepy for trends
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -84,7 +85,7 @@ def getInfo(trend, page):
     global recentTime
     global scores
 
-    key = '878293ce72msha47261c9511818ep1f0a27jsn0d54eeb13464'
+    key = RAPID_KEY
     url = "https://rapidapi.p.rapidapi.com/v1/search"
     querystring = {"q": trend,
                    "sort_by": "relevancy",
