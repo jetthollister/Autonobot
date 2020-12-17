@@ -6,7 +6,7 @@ BEARER_TOKEN = BEARER_TOKEN
 
 class Twitter:
 
-    def create_url(topic, next_token):
+    def createSearchUrl(topic, next_token):
         global recentTime
 
         query = topic + ' -is:retweet -is:quote lang:en'
@@ -32,11 +32,31 @@ class Twitter:
 
         return url
 
-    def create_headers(bearer_token):
+    def connectToMediaEndpoint(url, headers):
+        response = requests.request("POST", url, headers=headers)
+        print(response.status_code)
+        if response.status_code != 200:
+            raise Exception(response.status_code, response.text)
+        return response.json()
+
+    def simpleMediaUpload(path):
+        global BEARER_TOKEN
+
+        url = ('https://upload.twitter.com/1.1/media/upload.json'
+               '?media_category=tweet_image&'
+               'media={}').format(path)
+
+        headers = Twitter.createHeaders(BEARER_TOKEN)
+        json_response = Twitter.connectToMediaEndpoint(url, headers)
+        res = json_response['media_id']
+
+        return res
+
+    def createHeaders(bearer_token):
         headers = {"Authorization": "Bearer {}".format(bearer_token)}
         return headers
 
-    def connect_to_endpoint(url, headers):
+    def connectToSearchEndpoint(url, headers):
         response = requests.request("GET", url, headers=headers)
         print(response.status_code)
         if response.status_code != 200:
@@ -45,10 +65,16 @@ class Twitter:
 
     def getTweets(topic, next_token):
         global BEARER_TOKEN
-        url = Twitter.create_url(topic, next_token)
-        headers = Twitter.create_headers(BEARER_TOKEN)
-        json_response = Twitter.connect_to_endpoint(url, headers)
+        url = Twitter.createSearchUrl(topic, next_token)
+        headers = Twitter.createHeaders(BEARER_TOKEN)
+        json_response = Twitter.connectToSearchEndpoint(url, headers)
         res = (json_response['data'],
                json_response['meta']['next_token'],
                json_response['includes']['users'])
         return res
+
+    def postTweet(text, plot):
+        global BEARER_TOKEN
+
+        mediaId = Twitter.simpleMediaUpload('./viz/pickles/test/sentiment.png')
+        print(mediaId)

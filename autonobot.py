@@ -1,13 +1,15 @@
 # Database access imports
 from database.access import Database
 from twitter.api import Twitter
-from viz.sentiment import getSentiment
+from viz.sentiment import getSentiment, plotSentiment
+
 from datetime import datetime, timezone, timedelta
 import tweepy
 import os
 import requests as r
 from dotenv import load_dotenv
 from gensim.summarization import summarize
+
 
 import nltk
 from nltk import sent_tokenize
@@ -33,7 +35,6 @@ CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 ACCESS_KEY = os.getenv('ACCESS_KEY')
 ACCESS_SECRET = os.getenv('ACCESS_SECRET')
 BEARER_TOKEN = os.getenv('BEARER_TOKEN')
-RAPID_KEY = os.getenv('RAPID_KEY')
 
 # Using tweepy for trends
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -63,7 +64,7 @@ def manageTrends():
     global currentTrends, queue
 
     # Tweet volume threshold is currently set to 100,000
-    tweet_volume = 250000
+    tweet_volume = 100000
 
     trends = [trend['name']
               for trend in api.trends_place(id=2352824)[0]['trends']
@@ -85,7 +86,7 @@ def getInfo(trend, page):
     global recentTime
     global scores
 
-    key = RAPID_KEY
+    key = '878293ce72msha47261c9511818ep1f0a27jsn0d54eeb13464'
     url = "https://rapidapi.p.rapidapi.com/v1/search"
     querystring = {"q": trend,
                    "sort_by": "relevancy",
@@ -115,7 +116,7 @@ def getSummary(group):
     ranked = sent_tokenize(summarize(' '.join(group), ratio=0.1))
 
     for i, sent in enumerate(ranked):
-        if len(sent) <= 400:
+        if len(sent) <= 280:
             return sent
 
     return ranked[0]
@@ -126,7 +127,7 @@ def aggTweets(topic):
     tweets = []
     next_token = ''
 
-    for i in range(10):
+    for i in range(10):  # CHANGE THIS
         data = Twitter.getTweets(topic, next_token)
         next_token = f'next_token={data[1]}'
 
@@ -156,31 +157,10 @@ def siftTweets(tweets):
     return text, locations
 
 
-def temp():
+def postTweet(status, path):
 
-    tweets = aggTweets("coup")
-    text = siftTweets(tweets)[0]
-    data = [getSentiment(tweet) for tweet in text]
-
-    sents = []
-    subjs = []
-
-    for stat in data:
-        if abs(stat[0]) <= 0.05:
-            sent = 0
-        elif stat[0] > 0.05:
-            sent = 1
-        else:
-            sent = -1
-        if stat[1] >= 0.5:
-            subj = 1
-        else:
-            subj = 0
-
-        sents.append(sent)
-        subjs.append(subj)
-
-    return sents, subjs, text
+    api.update_with_media(path,
+                          status=status)
 
 
 def main():
@@ -208,8 +188,20 @@ def main():
 
     tweet_text = f'TRENDING – {top}\n\n{summary}'
     print(tweet_text)
+
+    tweets = aggTweets(top)
+    text = siftTweets(tweets)[0]
+    data = [getSentiment(tweet) for tweet in text]
+
+    plotSentiment(data, top)
+
+    postTweet(tweet_text, './viz/plots/sentPlot.png')
+
+    print('Success!')
+
     return tweet_text
 
 
 if __name__ == '__main__':
-    temp = temp()
+    # est = temp('Kobe')
+    main()

@@ -1,8 +1,10 @@
-import re
-from textblob import TextBlob
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pickle
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-# Sentiment: -1 = negative, 1 = positive
-# Subjectivity: 0 = objective, 1 = subjective
+sns.set_context("poster")
+plt.style.use("dark_background")
 
 sample = ('Time for @hallofstairs the unions to come through with '
           'their promises'
@@ -12,37 +14,46 @@ sample = ('Time for @hallofstairs the unions to come through with '
           '#SaveDemocracy')
 
 
-def regTokenize(text):
-    marker = text.replace('#', 'QT145')
-    token = re.compile(r'\w+')
-    words = token.findall(marker)
-    return words
-
-
-def splitHashtags(token):
-    if 'QT145' in token:
-        token = token.replace('QT145', '')
-        return re.sub(r"([A-Z])", r" \1", token).split()
-
-    return token
-
-
-def recompile(group):
-    res = []
-    for i, item in enumerate(group):
-        if type(item) == list:
-            [res.append(j.lower()) for j in item]
-        else:
-            res.append(item.lower())
-
-    return ' '.join(res)
-
-
 def getSentiment(text):
-    tokens = regTokenize(text)
-    tokens = [splitHashtags(word) for word in tokens]
-    recompiled = recompile(tokens)
+    analyzer = SentimentIntensityAnalyzer()
+    score = analyzer.polarity_scores(text)
+    return score['compound']
 
-    sent, subj = TextBlob(recompiled).sentiment
 
-    return sent, subj
+def plotSentiment(scores, topic):
+
+    f = plt.figure(figsize=(12, 7))
+
+    y, _, _ = plt.hist(scores, bins=15, density=True)
+    plt.clf()
+
+    n, bins, patches = plt.hist(scores, bins=15,
+                                facecolor='#2ab0ff',
+                                edgecolor='white',
+                                linewidth=1, alpha=1,
+                                density=True)
+
+    n = n.astype('int')
+
+    for i in range(len(patches)):
+        patches[i].set_facecolor(plt.cm.RdBu(i*18))
+
+    ax = sns.kdeplot(scores, color='#D3D3D3')
+
+    ax.set(xlim=(-1.05, 1.05))
+    ax.set(ylim=(0, y.max()+(y.max()/10)))
+
+    sns.despine()
+    ax.set_xticks([-1.0, -0.5, 0.0, 0.5, 1.0])
+    ax.set_xticklabels([-1.0, -0.5, 0.0, 0.5, 1.0])
+
+    # Plot formatting
+    plt.title(f'Sentiment Density of {len(scores)} "{topic}" Tweets')
+    plt.xlabel('Sentiment')
+    plt.ylabel('Density')
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+    f.savefig('./viz/plots/sentPlot.png', transparent=False)
+
+    # pickle.dump(f, open('./viz/pickles/sentPlot.pickle', 'wb'))
+
+    return
