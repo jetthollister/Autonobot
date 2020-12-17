@@ -1,6 +1,6 @@
 # Database access imports
 from database.access import Database
-from twitter.api import Twitter
+from twitter.req import getTweets
 from viz.sentiment import getSentiment, plotSentiment
 
 from datetime import datetime, timezone, timedelta
@@ -26,7 +26,6 @@ SQL_DB = './database/trending.db'
 #     Include topic of conversation - maybe use this to filter unrelated news
 # https://towardsdatascience.com/real-time-twitter-sentiment-analysis-for-brand-improvement-and-topic-tracking-chapter-2-3-1caf05346721
 # =============================================================================
-
 
 # Twitter API info
 load_dotenv()
@@ -129,7 +128,7 @@ def aggTweets(topic):
     next_token = ''
 
     for i in range(10):  # CHANGE THIS
-        data = Twitter.getTweets(topic, next_token)
+        data = getTweets(topic, next_token)
         next_token = f'next_token={data[1]}'
 
         for tweet, user in zip(data[0], data[2]):
