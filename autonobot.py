@@ -44,7 +44,7 @@ api = tweepy.API(auth)
 
 
 # Set recency for tweets
-recency = 6
+recency = 6  # 6 hours
 lastStamp = datetime.now(timezone.utc) - timedelta(hours=recency)
 recentTime = lastStamp.astimezone().isoformat()
 

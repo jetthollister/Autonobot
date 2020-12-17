@@ -1,7 +1,13 @@
 import requests
-from autonobot import recentTime, BEARER_TOKEN
-recentTime = recentTime
-BEARER_TOKEN = BEARER_TOKEN
+import os
+from datetime import datetime, timezone, timedelta
+BEARER_TOKEN = os.getenv('BEARER_TOKEN')
+
+
+# Set recency for tweets
+recency = 6  # 6 hours
+lastStamp = datetime.now(timezone.utc) - timedelta(hours=recency)
+recentTime = lastStamp.astimezone().isoformat()
 
 
 def createSearchUrl(topic, next_token):
