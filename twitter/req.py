@@ -33,7 +33,6 @@ def createSearchUrl(topic, next_token):
 
 def connectToMediaEndpoint(url, headers):
     response = requests.request("POST", url, headers=headers)
-    print(response.status_code)
     if response.status_code != 200:
         raise Exception(response.status_code, response.text)
     return response.json()
