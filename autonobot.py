@@ -1,4 +1,5 @@
 # Database access imports
+from twitter.req import getTweets
 from database.access import Database
 from viz.sentiment import getSentiment, plotSentiment
 
@@ -47,8 +48,6 @@ api = tweepy.API(auth)
 recency = 6  # 6 hours
 lastStamp = datetime.now(timezone.utc) - timedelta(hours=recency)
 recentTime = lastStamp.astimezone().isoformat()
-
-from twitter.req import getTweets
 
 # Connect to SQL database
 conn = Database.sqlConnect(SQL_DB)
